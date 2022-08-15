@@ -4,9 +4,9 @@
 \geometry{a4paper, scale=0.8}
 \newtheorem{theorem}{Theorem}
 
-\title{Randcast Litepaper}
-\author{Arpachain}
-\date{May 2022}
+\title{ARPA Network Litepaper}
+\author{Penrose}
+\date{\today}
 
 \begin{document}
 
@@ -14,33 +14,25 @@
 
 \section{Introduction}
 
-Like the physical world, where the whole universe is built upon random motions of molecules, random numbers are ubiquitous and essential in the Metaverse. Randcast provides randomness capability to blockchains and Web 3.0. A trustworthy and reliable pseudo-random number generator is a cornerstone to either blockchain infrastructures or applications built upon. In terms of the decentralized and trustless nature of the blockchain, the randomness should also be tamper-proof, disitributely generated and verifiable. 
+As a fundamental infrastructure of the Metaverse, the blockchain has proven its great significance of being a distributed global ledger. During the past decade, academic and industrial experts have made vast efforts to improve the privacy, scalability and interoperability of it. An effective means to enhance the blockchain is by verifiably outsourcing on-chain computation and storage to off-chain through threshold cryptography schemes. These schemes offer trust by their provable security and decentralization, which matches the distributed and trustless nature of the blockchain. At the same time, the blockchain can, as a bulletin board, serve as a reliable broadcast channel for these cryptographic algorithms. Therefore, combining the threshold cryptography with blockchains can simultaneously strengthen the blockchains and facilitate the implementation of the threshold cryptography.
 
-\subsection{Randcast Features}
-\begin{itemize}
-    \item Decentralization, Randcast produces random number in a decentralized manner, entropy is gathered from multiple entities located in different regions running individual nodes. This manner offers unpredictability and fairness in the physical level.
-    \item Uniqueness, Randcast generates random numbers depending only on request messages and node secrets. Given certain signing group and user input, the randomness is unique and tamper-proof which mitigates corruption inside the network.
-    \item Verifiability, Randcast provides everyone the ability to check the validity of random number. By virtue of underlying cryptographic primitive, The random number is unlikely to be forged or manipulated
-    \item Non-interactive, Randcast avoids heavy synchronous communication in the random generation phase. An non-interactive procedure guarantees a better service status.
-    \item High availability, Randcast owns a high availability thanks to its decentralization and non-interactive. With the growth of its network size, the downtime will reduce accordingly.
-    \item Multiple Chain Supported, Randcast is designed to adapt to multiple chains, which facilitates developers from multiverse casting “randomness” spells. Our underlying threshold signature network will keep consistency between the different data replicas.
-\end{itemize}
-
-\subsection{ARPA Features}
+In this paper, we propose the ARPA Network, a permissionless distributed network to provide essential threshold signature capability for blockchains and Web3. With the aid of the ARPA Network, one can build applications regrading secure key management, privacy-preserving transaction, cross-chain messaging, distributed randomness generation, etc. Nodes in the network are grouped and execute the Boneh–Lynn–Shacham (BLS) threshold signature scheme. Thanks to the aggregatability of BLS signature and node management mechanism we apply, ARPA Network has the following features.
 \begin{itemize}
     \item Decentralization, ARPA nodes provides threshold signature service in a decentralized manner. Trust is distributed to multiple entities located in different regions running individual nodes. This manner offers better tamper-proof in the physical level.
     \item Flexibility, ARPA protocol supports a variety of signature applications. Users are allowed to customize their signature policy, import or export secrets, and choose security level
     \item Verifiability, ARPA signature scheme provides users the ability to trivially verify their signatures. By virtue of underlying cryptographic primitive, The signatures are unlikely to be forged or manipulated
-    \item Non-interactive, ARPA protocol avoids heavy synchronous communication in the signature generation phase. An non-interactive procedure guarantees reliable service status and flexible network topology.
-    \item High availability, ARPA signature service keeps a high availability thanks to its decentralization and non-interactive. With the growth of its network size, the downtime will reduce accordingly.
+    \item Non-interactivity, ARPA protocol avoids heavy synchronous communication in the signature generation phase. An non-interactive procedure guarantees reliable service status and flexible network topology.
+    \item High availability, ARPA signature service keeps a high availability thanks to its decentralization and non-interactivity. With the growth of its network size, the downtime will reduce accordingly.
     \item Multiple Chain Supported, ARPA network is designed to adapt to multiple chains, which facilitates developers from multiverse casting “randomness” spells. Our underlying threshold signature network will keep consistency between the different data replicas.
 \end{itemize}
 
-
+In the remainder of this paper, we first overview the existing threshold signature schemes and point out the reason why threshold BLS signature is suitable for distributed systems in section 2. Then section 3 lists out presuppositions and the building blocks of our design. A walk-through of our implemented protocol is given in section 4. And section 5 presents the system design, including the node management mechanism and high-level architecture of the network. Finally, section 6 demonstrates Randcast as a use case of ARPA Network.
 
 \section{Background}
 
 threshold BLS signature vs. ECDSA
+
+Existing threshold ECDSA protocols are all
 
 threshold BLS signature vs. BLS multisig (EDN18)
 
@@ -87,14 +79,11 @@ verification of each parties' partial signature
 
 \subsection{threshold BLS signature}
 
-Boneh-Lynn-Shacham (BLS) signature is first proposed as a short signature scheme where the signatures consist only of a single group element. ElGamal type schemes such as digital signature algorithm (DSA) and elliptic curve digital signature algorithm (ECDSA) produces signatures comprised of a pair of integers. Therefore, BLS signatures are about half of the length of those produced by other widely used schemes at the same security level\cite{menezes2009introduction}.
-
-BLS signatures utilize a bilinear pairing which offers several interesting features. Firstly, determinism
-Secondly, aggregatablity 
+Boneh-Lynn-Shacham (BLS) signature is first proposed as a short signature scheme where the signatures consist only of a single group element. ElGamal type schemes such as digital signature algorithm (DSA) and elliptic curve digital signature algorithm (ECDSA) produces signatures comprised of a pair of integers. Therefore, BLS signatures are about half of the length of those produced by other widely used schemes at the same security level\cite{menezes2009introduction}. BLS signatures utilize a bilinear pairing which offers several interesting features. Firstly, BLS signatures are deterministic given particular message and keypair unlike ECDSA which requires fresh random value for each signing. This prevents signers from biasing results by repeat attempts to sign. Secondly, BLS signatures are aggregatable which means 
 
 The scheme is provably secure under the CDHP, assuming the hash function acts like a random oracle
 
-They are deterministic in the sense that a BLS signature depends only on the message and the signer’s key unlike other signature schemes, such as ECDSA, which require a fresh random value for each signed message to be secure. Put differently, any two BLS signatures on a given message produced with the same key are identical. 
+
 
 The BLS signature scheme consists of the following sub-procedures:
 \begin{itemize}
@@ -132,26 +121,40 @@ group corruption
 \section{System Architecture}
 
 
+\section{Randcast}
+
+Like the physical world, where the whole universe is built upon random motions of molecules, random numbers are ubiquitous and essential in the Metaverse. A trustworthy and reliable pseudo-random number generator is a cornerstone to either blockchain infrastructures or applications built upon. In this section, we instantiate Randcast as a randomness generation application of the ARPA Network. Inheriting from the threshold signature network, Randcast also have the following features.
+
+\begin{itemize}
+    \item Decentralization, Randcast produces random number in a decentralized manner, entropy is gathered from multiple entities located in different regions running individual nodes. This manner offers unpredictability and fairness in the physical level.
+    \item Uniqueness, Randcast generates random numbers depending only on request messages and node secrets. Given certain signing group and user input, the randomness is unique and tamper-proof which mitigates corruption inside the network.
+    \item Verifiability, Randcast provides everyone the ability to check the validity of random number. By virtue of underlying cryptographic primitive, The random number is unlikely to be forged or manipulated
+    \item Non-interactive, Randcast avoids heavy synchronous communication in the random generation phase. An non-interactive procedure guarantees a better service status.
+    \item High availability, Randcast owns a high availability thanks to its decentralization and non-interactive. With the growth of its network size, the downtime will reduce accordingly.
+    \item Multiple Chain Supported, Randcast is designed to adapt to multiple chains, which facilitates developers from multiverse casting “randomness” spells. Our underlying threshold signature network will keep consistency between the different data replicas.
+\end{itemize}
 
 \appendix
 \section{BLS 12-381 specification}
 BLS12-381 is a specific curve of a pairing-friendly curve family. It has an embedded degree as 12 and a 381-bit field prime. The public parameters are outlined as follows\cite{bls12381spec}.
 
 \begin{align*}
-u &= \texttt{-0x} && \texttt{d2010000 00010000} \\
-k &= &&\texttt{12} \\
-q &= \texttt{ 0x} && \texttt{1a0111ea 397fe69a 4b1ba7b6 434bacd7 64774b84 f38512bf 6730d2a0} \\
+\texttt{u} &= \texttt{-0x} && \texttt{d2010000 00010000} \\
+\texttt{k} &= &&\texttt{12} \\
+\texttt{q} &= \texttt{ 0x} && \texttt{1a0111ea 397fe69a 4b1ba7b6 434bacd7 64774b84 f38512bf 6730d2a0} \\
 & && \texttt{f6b0f624 1eabfffe b153ffff b9feffff ffffaaab} \\
-r &= \texttt{ 0x} && \texttt{73eda753 299d7d48 3339d808 09a1d805 53bda402 fffe5bfe ffffffff}\\
+\texttt{r} &= \texttt{ 0x} && \texttt{73eda753 299d7d48 3339d808 09a1d805 53bda402 fffe5bfe ffffffff}\\
 & && \texttt{00000001} \\
-E(\mathbb{F}_q) &:= &&y^2 = x^3 + 4 \\
-\mathbb{F}_{q^2} &:= &&\mathbb{F}_q[i]/(x^2 + 1) \\
-E'(\mathbb{F}_{q^2}) &:= &&y^2 = x^3 + 4(i + 1) \\
+\mathtt{E(\mathbb{F}_q)} &:= &&\mathtt{y^2 = x^3 + 4} \\
+\mathtt{\mathbb{F}_{q^2}} &:= &&\mathtt{\mathbb{F}_q[i]/(x^2 + 1)} \\
+\mathtt{E'(\mathbb{F}_{q^2})} &:= &&\mathtt{y^2 = x^3 + 4(i + 1)} \\
 \end{align*}
-
 
 
 \bibliographystyle{plain} % We choose the "plain" reference style
 \bibliography{refs} % Entries are in the refs.bib file
 
 \end{document}
+
+
+\sectio
