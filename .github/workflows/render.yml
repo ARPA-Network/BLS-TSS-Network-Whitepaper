@@ -30,5 +30,6 @@ jobs:
           root_file: main.tex
       - name: Release PDF file
         uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: main.pdf
