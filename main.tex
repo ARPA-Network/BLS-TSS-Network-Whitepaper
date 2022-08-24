@@ -16,29 +16,27 @@
 
 As a fundamental infrastructure of the Metaverse, the blockchain has proven its great significance of being a distributed global ledger. During the past decade, academic and industrial experts have made vast efforts to improve the privacy, scalability and interoperability of it. An effective means to enhance the blockchain is by verifiably outsourcing on-chain computation and storage to off-chain through threshold cryptography schemes. These schemes offer trust by their provable security and decentralization, which matches the distributed and trustless nature of the blockchain. At the same time, the blockchain can, as a bulletin board, serve as a reliable broadcast channel for these cryptographic algorithms. Therefore, combining the threshold cryptography with blockchains can simultaneously strengthen the blockchains and facilitate the implementation of the threshold cryptography.
 
-In this paper, we propose the ARPA Network, a permissionless distributed network to provide essential threshold signature capability for blockchains and Web3. With the aid of the ARPA Network, one can build applications regrading secure key management, privacy-preserving transaction, cross-chain messaging, distributed randomness generation, etc. Nodes in the network are grouped and execute the Boneh–Lynn–Shacham (BLS) threshold signature scheme. Thanks to the aggregatability of BLS signature and node management mechanism we apply, ARPA Network has the following features.
+In this paper, we propose the ARPA Network, a permissionless distributed network to provide essential threshold signature capability for blockchains and Web3. Roughly speaking, threshold signature is a protocol processing signature-related functions among a group of nodes through multi-party computation (MPC). It can help keeping secrets distributedly, reaching consensus by a majority vote, or hiding identity of signers. With the aid of the ARPA Network, one can build applications regrading secure key management, anonymous transaction, cross-chain messaging, quorum approval, distributed randomness generation, etc. Like the blockchain, trust of the ARPA Network comes from the distribution across independent nodes. Those nodes are grouped and execute the Boneh–Lynn–Shacham (BLS) threshold signature scheme. Thanks to the aggregatability of BLS signature and node management mechanism we apply, ARPA Network has the following features.
 \begin{itemize}
     \item Decentralization, ARPA nodes provides threshold signature service in a decentralized manner. Trust is distributed to multiple entities located in different regions running individual nodes. This manner offers better tamper-proof in the physical level.
     \item Flexibility, ARPA protocol supports a variety of signature applications. Users are allowed to customize their signature policy, import or export secrets, and choose security level
     \item Verifiability, ARPA signature scheme provides users the ability to trivially verify their signatures. By virtue of underlying cryptographic primitive, The signatures are unlikely to be forged or manipulated
     \item Non-interactivity, ARPA protocol avoids heavy synchronous communication in the signature generation phase. An non-interactive procedure guarantees reliable service status and flexible network topology.
     \item High availability, ARPA signature service keeps a high availability thanks to its decentralization and non-interactivity. With the growth of its network size, the downtime will reduce accordingly.
-    \item Multiple Chain Supported, ARPA network is designed to adapt to multiple chains, which facilitates developers from multiverse casting “randomness” spells. Our underlying threshold signature network will keep consistency between the different data replicas.
+    \item Multiple Chain Supported, ARPA network is designed to adapt to multiple chains, which facilitates developers from multiverse building their applications. Our underlying threshold signature network may keep consistency between the different data replicas.
 \end{itemize}
 
-In the remainder of this paper, we first overview the existing threshold signature schemes and point out the reason why threshold BLS signature is suitable for distributed systems in section 2. Then section 3 lists out presuppositions and the building blocks of our design. A walk-through of our implemented protocol is given in section 4. And section 5 presents the system design, including the node management mechanism and high-level architecture of the network. Finally, section 6 demonstrates Randcast as a use case of ARPA Network.
+In the remainder of this paper, we first overview the existing threshold signature schemes and point out the reason why threshold BLS signature is suitable for distributed systems in section 2. Then section 3 lists out presuppositions and the building blocks of our design. A walk-through of our implemented protocol is given in section 4, including the cryptographic part and the node management mechanism. And section 5 presents the system design by showing the high-level architecture of the network. Finally, section 6 demonstrates Randcast as a use case of the ARPA Network.
 
 \section{Background}
 
-threshold BLS signature vs. ECDSA
+Threshold signature has been researched and applied a lot in the near few years. Many classical signature algorithms has been thresholdized, including BLS, ECDSA\cite{gennaro2018fast}, EdDSA\cite{stinson2001provably}, RSA\cite{damgaard2001practical}. However, when applied to a distributed system, not all threshold signature schemes are well suited. For example, threshold ECDSA takes 3 to 13 synchronous communication rounds depending on different construction method\cite{aumasson2020survey}. Under real world conditions, transmission latency determines the performance of the MPC protocols. Multiple rounds of communications will certainly influence the average speed of threshold signature generation. Moreover, a failed node may even cause protocol abort. Fortunately, BLS signature utilizes a bilinear pairing which provides homomorphic mapping between the secret keys and the signatures. This makes asynchronous threshold signatue scheme possible.  
 
-Existing threshold ECDSA protocols are all
-
-threshold BLS signature vs. BLS multisig (EDN18)
+BDN18 describes a BLS multi-signature for bitcoin, rather than a threshold signature. GLOW20 targets a distributed strong pseudorandom function, and tries to extend their DVRF to threshold BLS signature by replacing the DKG algorithm. AFAICS, it brings a bit more security to threshold signature at the cost of introducing new ZKP validations. Regarding Gennaro has proven JFDKG is sufficiently secure for discrete-log problem, our design is good enough for a threshold signature service.
 
 \section{Prosuppositions}
 
-While building an underlying threshold signature service for the blockchain, we should firstly clarify the security and communication model. The following outlined assumptions are highly relevant to the characteristics of blockchain, where the system is distributed and permissionless while the participants are economically rational but potentially malicious.
+While building an underlying threshold signature service for the blockchain, we should firstly clarify the security and communication model. The following outlined assumptions are highly relevant to the characteristics of the blockchain, where the system is distributed and permissionless while the participants are economically rational but potentially malicious.
 
 \subsection{Security Assumption}
 
@@ -46,66 +44,63 @@ We assume that a static, malicious, honest-majority adversary. The attacker can 
 
 \subsection{Communication Model}
 
-The distributed signature network is composed of a set of $n$ parties $P_1, \cdots, P_n$ that connected by a complete network of private point-to-point channels. In addition, the parties have access to a dedicated broadcast channel. Several works\cite{kate2009distributed,kate2012distributed,cachin2002asynchronous} have researched on the threshold signature without a preset reliable broadcast. They assimilate various secret sharing schemes into reliable broadcast or consensus protocol. e.g. AVSS\cite{cachin2002asynchronous} merges a bivariate polynomial into Bracha’s reliable broadcast \cite{bracha1984asynchronous}. Gennaro\cite{gennaro2007secure} leverages Byzantine fault tolerant protocol\cite{castro1999practical} to build the DKG for the Internet. It can be concluded from these articles that constructing a reliable broadcast channel is equivalent to reaching a consensus among nodes. Considering there are kinds of blockchains and smart contracts that help us broadcast and record messages publicly, it is reasonable to offload this part of protocol to blockchains.
+The distributed signature network is composed of a set of $n$ parties $P_1, \cdots, P_n$ that connected by a complete network of private point-to-point channels. In addition, the parties have access to a dedicated broadcast channel. Several works\cite{kate2009distributed,kate2012distributed,cachin2002asynchronous} have researched on the threshold signature without a preset reliable broadcast. They assimilate various secret sharing schemes into reliable broadcast or consensus protocol. e.g. AVSS\cite{cachin2002asynchronous} merges a bivariate polynomial into Bracha’s reliable broadcast \cite{bracha1984asynchronous}. Gennaro\cite{gennaro2007secure} leverages Byzantine fault tolerant (BFT) protocol\cite{castro1999practical} to build the DKG for the Internet. It can be concluded from these articles that constructing a reliable broadcast channel is equivalent to reaching a consensus among nodes. Considering there are kinds of blockchains and smart contracts that help us broadcast and record messages publicly, it is reasonable to offload this part of protocol to blockchains.
 
 \subsection{Synchrony Assumption}
 
-Based on the block generation mechanism, we may assume a partially synchronous communication model: protocol proceeds in synchronized rounds and messages are received by their recipients within some specified time bound. The block time of a blockchain that guarantees liveness can be used as the synchronized clock in the threshold signature. The drawback is that the typical value of the block time is several orders of magnitude larger than that of an Internet transmission. The partial synchrony opens up an attack way for the adversary that, in each round of communication, he can wait for the messages of the uncorrupted parties to arrive, then decide on his computation and communication for that round, and still get his messages delivered to the honest parties on time. In the worst case, the adversary may speak last in every communication round to exploit the back-running.
+Based on the block generation mechanism, we may assume a partially synchronous communication model: protocol proceeds in synchronized rounds and messages are received by their recipients within some specified time bound. The block time of a blockchain that guarantees liveness can be used as the synchronized clock in the threshold signature. The drawback is that the typical value of the block time is several orders of magnitude larger than that of an Internet transmission. The partial synchrony opens up an attack way that, an adversary can observe the messages of the uncorrupted parties, then decide on his action in each round of the protocol, and still get his messages delivered to the rest of the parties on time. In the worst case, the adversary may speak last in every communication round to exploit the back-running\cite{gennaro2007secure}.
 
 Although asynchronous verifiable secret sharing scheme is intractable to design, there are several works researching on it. Unconditionally secure AVSS has a communication complexity of $\Omega(n^5)$, making it unrealistic to use. Comprimising the unconditional security assumption 
 
-\section{Randcast Protocol}
+\section{ARPA Threshold Signature Protocol}
 
-To provide a threshold signature service, Randcast combines threshold BLS signature with block-chains. In high level, The user call the Randcast protocol by sending a transaction on the blockchain. The task will be assigned to one group of network nodes. The nodes collectively generate a signature on the message provided by the user. The threshold BLS signature is comprised of two main parts, distributed key generation and threshold signature. Randcast protocol also defines the procedure of nodes registration, secession and grouping.
+Based on the assumptions raised previously, ARPA Network builds up the protocol by assimilating Joint-Feldman Distributed Key Generation (DKG)\cite{pedersen1991non} into standard BLS signature\cite{irtf-cfrg-bls-signature-05}. Furthermore, ARPA Network combines the threshold BLS signature with the blockchain. In high level, The user requests the service by sending a transaction to the blockchain. The task will be assigned to one group of network nodes. The nodes collectively generate a signature on the message provided and return it back to the blockchain. In the process, the threshold BLS signature is responsible for generating a decentralized tamper-proof signature, and the blockchain provides a reliable broadcast channel as well as coordinating functionality. The signature scheme is comprised of two main parts, distributed key generation and threshold signature. ARPA threshold signature protocol also defines the procedure of nodes registration, secession and grouping.
+
+Before diving deep into the protocol, we have to provide some math preliminaries. The magical, widely-used BLS signature relies on bilinear pairing. 
 
 \subsection{Distributed Key Generation}
 
-A distributed key generation (DKG) protocol is an essential component of threshold cryptosystems reponsible for generating private and public keys of participants. Typically, the key management policy and signature generation algorithm is fundamentally determined by the underlying secret sharing scheme used in the DKG. This is because DKG decides the relationship of key shares hold by each node
+As an essential component of threshold cryptosystems, a distributed key generation (DKG) protocol is reponsible for generating private and public keys of participants. The underlying secret sharing scheme used in the DKG decides the relationship of key shares hold by each participant. This also fundamentally determines the key management policy and the signature generation algorithm used in the threshold signature scheme. Why JF-DKG is secure enough for TSS BLS
 
 \begin{algorithm}
-\caption{Joint-Feldman Distributed Key Generation\cite{gennaro2007secure}}
+\caption{Joint-Feldman Distributed Key Generation\cite{gennaro2007secure}}\label{alg:JFDKG}
 \begin{algorithmic}[1]
-\Require Adversary threshold $t$, group size $n$, modulus $p$, BLS underlying field $\mathbb{F}_q$
-\Ensure Shamir secret shares $s_i$ for party $P_i$ respectively
-\State Each party $P_i$ chooses a $f_i(z) = \sum_{j=0}^t a_{ij}z^{j}$, where $a_{ij} \in_R \mathbb{Z}_q$, broadcasts commitment $C_{ik} = g^{a_{ik}} \bmod p$ for $k \in [0,t]$. Each party $P_i$ computes the shares $s_{ij} = f_i(j) \bmod q$ for $j \in [1,n]$ and sends $s_{ij}$ to party $P_j$ secretly.
-\State Each party $P_j$ verifies the shares his received shares $g^{s_{ik}} = \prod_{k=0}^t(C_{ij})^{j^k} \mod p$ for $k \in [1,n]$. If the check for an index i fails, $P_j$ raises a compliant against party $P_i$
-\State Party $P_i$ reveals the shares corresponding to raised complaints. Each party $P_j$ check the validity between complaints and equations. Any failed party will be contained in local disqualified set of each every party, while $QUAL$ is the set of non-disqualified parties.
-\State The public value $y$ is computed as $y = \prod_{i\in QUAL} a_{i0} \bmod p$. The public verification values are computed as $P_k = \prod_{i\in QUAL} C_{ik} \bmod p$ for $k = 1,\dots, t$. Each party $P_j$ sets his share of the secret as $x_j = \sum_{i\in QUAL} s_{ij} \bmod q$. The secret shared value $x$ itself is not computed by any party, but it is equal to $x = \sum_{i \in QUAL} a_{i0} \bmod q$.
+\Require Adversary threshold $t$, group size $n$, a elliptic curve $\mathbb{G}_2$ with a prime order $r$ and a generator $g_2$.
+\Ensure Shamir secret shares $sk_i$ for party $P_i$ respectively.
+\State Each party $P_i$ chooses a $f_i(z) = \sum_{k=0}^t a_{ik}z^{k}$, where $a_{ik} \in_R \mathbb{Z}_r^*$, broadcasts commitment $C_{ik} = g_2^{a_{ik}}$ for $k \in [0,t]$. Each party $P_i$ computes the shares $s_{ij} = f_i(j) \bmod r$ for $j \in [1,n]$ and sends $s_{ij}$ to party $P_j$ secretly.
+\State Each party $P_j$ verifies the shares his received $g_2^{s_{ij}} = \prod_{k=0}^t(C_{ik})^{j^k}$ for $i \in [1,n]$. If the check for an index $i$ fails, $P_j$ raises a compliant against party $P_i$
+\State Party $P_i$ reveals the shares corresponding to raised complaints. Each party $P_j$ check the validity between complaints and equations. Any failed party will be contained in local disqualified set of each party. $QUAL$ is defined as the set of non-disqualified parties.
+\State The public key $y$ is computed as $pk = \prod_{i\in QUAL} C_{i0}$. The secret shared value $sk$ itself is not computed by any party, but it is equal to $sk = \sum_{i \in QUAL} a_{i0} \bmod r$. Each party $P_j$ sets his share of the secret as $sk_j = \sum_{i\in QUAL} s_{ij} \bmod r$, and corresponding public key share as $pk_j = \prod_{i \in QUAL} g_2^{s_{ij}} = \prod_{i \in QUAL} \prod_{k=0}^t (C_{ik})^{j^k}$
 \end{algorithmic}
 \end{algorithm}
 
-
-verification of each parties' partial signature
-
 \subsection{threshold BLS signature}
 
-Boneh-Lynn-Shacham (BLS) signature is first proposed as a short signature scheme where the signatures consist only of a single group element. ElGamal type schemes such as digital signature algorithm (DSA) and elliptic curve digital signature algorithm (ECDSA) produces signatures comprised of a pair of integers. Therefore, BLS signatures are about half of the length of those produced by other widely used schemes at the same security level\cite{menezes2009introduction}. BLS signatures utilize a bilinear pairing which offers several interesting features. Firstly, BLS signatures are deterministic given particular message and keypair unlike ECDSA which requires fresh random value for each signing. This prevents signers from biasing results by repeat attempts to sign. Secondly, BLS signatures are aggregatable which means 
+BLS signature is first proposed as a short signature scheme where the signatures consist only of a single group element. ElGamal type schemes such as digital signature algorithm (DSA) and elliptic curve digital signature algorithm (ECDSA) produces signatures comprised of a pair of integers. Therefore, BLS signatures are about half of the length of those produced by other widely used schemes at the same security level\cite{menezes2009introduction}. BLS signatures utilize a bilinear pairing which offers several interesting features. Firstly, BLS signatures are deterministic given particular message and keypair, unlike ECDSA which requires fresh random value for each signing. This prevents signers from biasing results by repeated signing attempts. Secondly, BLS signatures are aggregatable which means specific computations on generated signatures are possible. This makes a difference between the threshold BLS signature and other threshold signatures. Multiple rounds of synchronous communication is unnecessary for combining partial BLS signatures.
 
-The scheme is provably secure under the CDHP, assuming the hash function acts like a random oracle
+The scheme is provably secure under the CDHP, assuming the hash function acts like a random oracle.
 
-
-
-The BLS signature scheme consists of the following sub-procedures:
+The BLS signature scheme consists of the following sub-procedures. Without loss of generality, we represent signatures by elements in $\mathbb{G}_1$ to achieve a more compact signature.
 \begin{itemize}
-    \item[] \textbf{Key Generation} To generate a key pair, a signer first chooses a random secret $sk \in_R \mathbb{Z}_p^*$ and computes the corresponding public key as $pk = g_2^{sk} \in \mathbb{G}_2$.
-    \item[] \textbf{Signature Generation} To compute a BLS signature $\sigma$ on a message $m$, the signer simply computes $\sigma = skH(m) \in \mathbb{G}_1$. $H(m)$ is a hash-to-curve function that maps arbitrary bit string to element in $\mathbb{G}_1$
-    \item[] \textbf{Signature Verification} To verify that a BLS signature $\sigma$ on a message $m$ is valid, the verifier checks if $e(H(m),X)=e(\sigma,g_2)$ holds using the signer's public key $pk$. It is easy to see that this equation holds for valid signature since
-    \begin{equation}
-        e(H(m),X)=e(H(m),g_2^x)=e(H(m),g_2)^x=e(xH(m),g_2)=e(\sigma,g_2)
-    \end{equation}
+    \item[] \textbf{Key Generate} To generate a key pair, a signer first chooses a random secret $sk \in_R \mathbb{Z}_r^*$ and computes the corresponding public key as $pk = g_2^{sk} \in \mathbb{G}_2$.
+    \item[] \textbf{Sign} To compute a BLS signature $\sigma$ on an arbitrary message $m$, the signer computes $\sigma = sk \times H(m) \in \mathbb{G}_1$. $H(m)$ is a hash-to-curve function that maps an arbitrary bit string to an element in $\mathbb{G}_1$
+    \item[] \textbf{Verify} To verify the validity of a BLS signature $\sigma$ on a given message $m$, the verifier checks if $(g_2,pk,H(m),\sigma)$ is a Diffie-Hellman quadruple which will be the case that $e(\sigma,g_2)=e(H(m),pk)$ holds
 \end{itemize}
 
-The goal of a threshold signature scheme is to collectively compute a signature by combining individual partial signatures independently generated by the participants. A threshold BLS signature scheme has the following sub-procedures:
+A threshold signature scheme is basically computing a signature among a group of independent nodes by multi-party computation (MPC). Considering the different processes of diverse signature schemes, the construction of their threshold versions will be very dissimilar. For example, the threshold ECDSA involves homomorphic multiplication of encrypted messages which results in a complex sub-protocol called Multiplicative to Additive (MtA). It takes several rounds of synchronous communications to process. As for the BLS signature, thanks to the its homomorphic property, the threshold BLS signature is neat and clear. Its sub-procedures are as follows.
 
 \begin{itemize}
-    \item[] \textbf{Key Generation} The $n$ participants execute a $t$-of-$n$ DKG to setup a collective public key $pk \in \mathbb{G}_2$, and private key shares $sk_i \in \mathbb{Z}_p^*$ of the virtual private key $sk$.
-    \item[] \textbf{Partial Signature Generation} To sign a message $m$, each participant $P_i$  uses his private key share $sk_i$  to create a partial BLS signature $\sigma_i=sk_i \times H(m)$.
-    \item[] \textbf{Partial Signature Verification} To verify the correctness of a partial signature $\sigma_i$ on $m$, a verifier uses the public key share $pk_i$, which is generated during the DKG, and verify that $e(H(m)),pk_i=e(\sigma_i.g_2)$.
-    \item[] \textbf{Signature Reconstruction} To reconstruct the collective BLS signature $\sigma$ on $m$, a verifier first need to gather $t$ different and valid partial BLS signature $\sigma_i$ on $m$ followed by a Lagrange interpolation on them.
-    \item[] \textbf{Signature Verification} To verify a collective BLS signature $\sigma$, a verifier simply checks that $e(H(m),pk)=e(\sigma,g_2)$ where $pk$ is the public key.
+    \item[] \textbf{Distributed Key Generate} The $n$ parities jointly execute Algorithm \ref{alg:JFDKG} to generate a group public key $pk \in \mathbb{G}_2$, a virtual private key $sk \in \mathbb{Z}_r^*$, and their shares $pk_i$, $sk_i$.
+    \item[] \textbf{Partial Signature Generate} To sign a message $m$, each party $P_i$ individually sign the partial BLS signature $\sigma_i=sk_i \times H(m)$ by his private key share $sk_i$.
+    \item[] \textbf{Partial Signature Verify} To validate a partial BLS signature, one uses the corresponding public key share to check if $e(H(m),pk_i)=e(\sigma_i.g_2)$ holds.
+    \item[] \textbf{Signature Reconstruct} To reconstruct the BLS signature $\sigma$ on $m$, one have to collect $t+1$ valid and independent partial signatures, then compute
+    \begin{align*}
+        \sigma = \prod_{k=0}^t \sigma_{i_k} \prod_{m=0, m\neq k}^t \frac{i_m}{i_m-i_k},\quad i_k, i_m \in [1,n].
+    \end{align*}
+    \item[] \textbf{Verify} To verify the validity of a BLS signature $\sigma$ on a given message $m$, the verifier checks if $(g_2,pk,H(m),\sigma)$ is a Diffie-Hellman quadruple, which will be the case that $e(\sigma,g_2)=e(H(m),pk)$ holds.
 \end{itemize}
 
-Thanks to the properties of Lagrange interpolation, the value of $\sigma$ is independent of the subset of $t$ valid partial signatures $\sigma_i$ chosen during signature reconstruction. Additionally, Lagrange interpolation also guarantees that no set of less than $t$ signers can predict or bias $\sigma$. In summary, a threshold BLS signature $\sigma$  exhibits all properties required for publicly-verifiable, unbiasable, unpredictable, and distributed randomness.
+Thanks to the properties of the Shamir secret-sharing (SSS) scheme, the generated signature $\sigma$ is identical no matter which partial signatures are chosen during reconstruction. Meanwhile, the determinism of BLS signature also guarantees the immutability of the threshold signature no matter what kinds of (computationally bounded) attacks are conducted . We now have a decentralized, verifiable, tamper-proof threshold BLS signature scheme.
 
 \subsection{Nodes Management Protocols}
 
@@ -123,7 +118,7 @@ group corruption
 
 \section{Randcast}
 
-Like the physical world, where the whole universe is built upon random motions of molecules, random numbers are ubiquitous and essential in the Metaverse. A trustworthy and reliable pseudo-random number generator is a cornerstone to either blockchain infrastructures or applications built upon. In this section, we instantiate Randcast as a randomness generation application of the ARPA Network. Inheriting from the threshold signature network, Randcast also have the following features.
+Like the physical world, where the whole universe is built upon random motions of molecules, random numbers are ubiquitous and essential in the Metaverse. A trustworthy and reliable pseudo-random number generator is a cornerstone to either blockchain infrastructures or applications built upon. In this section, we instantiate Randcast as a randomness generation application of the ARPA Network. Inheriting from the threshold signature network, Randcast also has the following features.
 
 \begin{itemize}
     \item Decentralization, Randcast produces random number in a decentralized manner, entropy is gathered from multiple entities located in different regions running individual nodes. This manner offers unpredictability and fairness in the physical level.
@@ -155,6 +150,3 @@ BLS12-381 is a specific curve of a pairing-friendly curve family. It has an embe
 \bibliography{refs} % Entries are in the refs.bib file
 
 \end{document}
-
-
-\sectio
